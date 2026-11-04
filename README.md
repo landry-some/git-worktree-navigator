@@ -76,7 +76,7 @@ Example `list` output:
 ### Matching
 
 A query matches a worktree when its characters appear in order in the branch name
-or the path, ignoring case (`lgbug` matches `fix/login-bug`). Matches at the start
+or the worktree folder name, ignoring case (`lgbug` matches `fix/login-bug`). Matches at the start
 of a word, right after `/`, `-`, `_` or `.`, and runs of consecutive characters
 score higher. If one worktree clearly wins, its path is printed straight away.
 When the top scores are close, or no query is given, a numbered list is shown on
