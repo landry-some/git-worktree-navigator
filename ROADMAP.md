@@ -16,7 +16,7 @@ What comes after v0.1. Estimates are rough, in hours, at 8 hours per working day
 - [ ] Live-filtering full-screen picker with curses, arrow keys and type-to-filter (6 h)
 - [ ] Preview pane in the picker: last commits and `git status --short` of the
       highlighted worktree (3 h)
-- [ ] Status columns in `list`: dirty marker, ahead/behind upstream (3 h)
+- [x] Status columns in `list`: dirty marker, ahead/behind upstream (3 h)
 - [ ] Frecency ordering: remember recent switches and rank them first on ties (3 h)
 - [ ] `fish` support in `shell-init`, plus bash/zsh/fish tab completion of worktree
       names (4 h)

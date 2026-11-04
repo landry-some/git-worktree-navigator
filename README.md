@@ -55,7 +55,7 @@ too. `gwn add` also moves you into the new worktree.
 Run it anywhere inside a git repository or one of its worktrees.
 
 ```bash
-git-worktree-navigator list                 # all worktrees with branch, HEAD, path
+git-worktree-navigator list                 # all worktrees with branch, HEAD, status, path
 git-worktree-navigator switch login         # print the path of the best match
 git-worktree-navigator switch               # pick from a numbered list
 git-worktree-navigator add fix/login-bug    # worktree for an existing branch
@@ -68,10 +68,14 @@ git-worktree-navigator remove login --force # even with uncommitted changes
 Example `list` output:
 
 ```
-* main            3f2a9c1  ~/code/shop
-  fix/login-bug   8b01d4e  ~/code/shop.worktrees/fix/login-bug
-  review/pr-212   c45e7aa  ~/code/shop.worktrees/review/pr-212  locked
+* main            3f2a9c1  !        ~/code/shop
+  fix/login-bug   8b01d4e  ! ↑2 ↓1  ~/code/shop.worktrees/fix/login-bug
+  review/pr-212   c45e7aa           ~/code/shop.worktrees/review/pr-212  locked
 ```
+
+The status column shows `!` when a worktree has uncommitted or untracked changes,
+and `↑n` / `↓n` when its branch is ahead of or behind its upstream. The column is
+left out when every worktree is clean and in sync.
 
 ### Matching
 

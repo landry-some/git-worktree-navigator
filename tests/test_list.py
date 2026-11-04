@@ -3,7 +3,7 @@ from pathlib import Path
 from conftest import git
 
 from git_worktree_navigator.cli import main
-from git_worktree_navigator.worktrees import parse_porcelain
+from git_worktree_navigator.worktrees import Status, parse_porcelain, parse_status
 
 PORCELAIN = """\
 worktree /home/dev/shop
@@ -71,3 +71,39 @@ def test_list_outside_repo_exits_2(tmp_path, monkeypatch, capsys):
 
     assert main(["list"]) == 2
     assert "not a git repository" in capsys.readouterr().err
+
+
+def test_parse_status_reads_dirty_and_ahead_behind():
+    text = "# branch.oid abc\n# branch.head main\n# branch.upstream origin/main\n# branch.ab +2 -1\n? notes.txt\n"
+    status = parse_status(text)
+    assert status == Status(dirty=True, ahead=2, behind=1)
+    assert status.summary == "! ↑2 ↓1"
+
+
+def test_parse_status_clean_without_upstream():
+    status = parse_status("# branch.oid abc\n# branch.head main\n")
+    assert status == Status() and status.summary == ""
+
+
+def commit(path, name):
+    (path / name).write_text(name + "\n")
+    git(path, "add", name)
+    git(path, "commit", "-q", "-m", name)
+
+
+def test_list_shows_dirty_and_ahead_behind(repo, capsys):
+    other = repo.parent / "shop.worktrees" / "feature"
+    git(repo, "worktree", "add", "-q", "-b", "feature/search", str(other))
+    git(other, "branch", "-q", "--set-upstream-to=main")
+    commit(other, "one")
+    commit(other, "two")
+    commit(repo, "three")
+    (repo / "scratch").write_text("untracked\n")
+
+    assert main(["list"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+
+    assert lines[0].split()[3] == "!"
+    assert lines[1].split()[2:4] == ["↑2", "↓1"]
+    # the path column stays aligned
+    assert lines[0].rindex(" ") == lines[1].rindex(" ")

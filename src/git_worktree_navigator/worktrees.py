@@ -112,6 +112,45 @@ def list_worktrees(cwd: Path | None = None) -> list[Worktree]:
     return parse_porcelain(out)
 
 
+@dataclass
+class Status:
+    dirty: bool = False
+    ahead: int = 0
+    behind: int = 0
+
+    @property
+    def summary(self) -> str:
+        """`!` when dirty, then `↑n` and `↓n` against the upstream, if any."""
+        parts = []
+        if self.dirty:
+            parts.append("!")
+        if self.ahead:
+            parts.append(f"↑{self.ahead}")
+        if self.behind:
+            parts.append(f"↓{self.behind}")
+        return " ".join(parts)
+
+
+def parse_status(text: str) -> Status:
+    """Parse the output of `git status --porcelain=v2 --branch`."""
+    status = Status()
+    for line in text.splitlines():
+        if line.startswith("# branch.ab "):
+            ahead, behind = line.split()[2:4]
+            status.ahead = int(ahead.lstrip("+"))
+            status.behind = int(behind.lstrip("-"))
+        elif line and not line.startswith("#"):
+            status.dirty = True
+    return status
+
+
+def worktree_status(wt: Worktree) -> Status:
+    """Dirty flag and ahead/behind counts. Empty for bare or missing worktrees."""
+    if wt.bare or wt.prunable:
+        return Status()
+    return parse_status(run_git("status", "--porcelain=v2", "--branch", cwd=wt.path))
+
+
 def find_current(worktrees: list[Worktree], toplevel: Path | None) -> Worktree | None:
     if toplevel is None:
         return None

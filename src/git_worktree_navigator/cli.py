@@ -20,6 +20,7 @@ from .worktrees import (
     is_dirty,
     list_worktrees,
     remove_worktree,
+    worktree_status,
 )
 
 
@@ -31,12 +32,18 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
-def format_list(worktrees: list[Worktree], current: Worktree | None) -> list[str]:
+def format_list(
+    worktrees: list[Worktree], current: Worktree | None, statuses: list[str]
+) -> list[str]:
     label_width = max(len(wt.label) for wt in worktrees)
+    status_width = max(len(s) for s in statuses)
     lines = []
-    for wt in worktrees:
+    for wt, status in zip(worktrees, statuses):
         marker = "*" if wt is current else " "
-        parts = [f"{marker} {wt.label:<{label_width}}", f"{wt.head[:7]:<7}", display_path(wt.path)]
+        parts = [f"{marker} {wt.label:<{label_width}}", f"{wt.head[:7]:<7}"]
+        if status_width:
+            parts.append(f"{status:<{status_width}}")
+        parts.append(display_path(wt.path))
         line = "  ".join(parts)
         if wt.flags:
             line += "  " + " ".join(wt.flags)
@@ -47,7 +54,8 @@ def format_list(worktrees: list[Worktree], current: Worktree | None) -> list[str
 def cmd_list(args: argparse.Namespace) -> int:
     worktrees = list_worktrees()
     current = find_current(worktrees, current_toplevel())
-    for line in format_list(worktrees, current):
+    statuses = [worktree_status(wt).summary for wt in worktrees]
+    for line in format_list(worktrees, current, statuses):
         print(line)
     return 0
 
@@ -127,7 +135,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_list = sub.add_parser("list", help="show all worktrees")
+    p_list = sub.add_parser(
+        "list",
+        help="show all worktrees",
+        description="Show every worktree with branch, short HEAD, status and path. "
+        "Status: ! for uncommitted or untracked changes, ↑n and ↓n for commits "
+        "ahead of and behind the upstream branch.",
+    )
     p_list.set_defaults(func=cmd_list)
 
     p_switch = sub.add_parser(
