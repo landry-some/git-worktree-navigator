@@ -138,3 +138,15 @@ def add_worktree(
     else:
         args = ["worktree", "add", str(path), branch]
     run_git(*args)
+
+
+def is_dirty(wt: Worktree) -> bool:
+    """True if the worktree has uncommitted or untracked changes."""
+    return bool(run_git("status", "--porcelain", cwd=wt.path).strip())
+
+
+def remove_worktree(wt: Worktree, force: bool = False) -> None:
+    args = ["worktree", "remove"]
+    if force:
+        args.append("--force")
+    run_git(*args, str(wt.path))

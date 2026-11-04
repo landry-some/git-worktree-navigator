@@ -17,7 +17,9 @@ from .worktrees import (
     current_toplevel,
     default_location,
     find_current,
+    is_dirty,
     list_worktrees,
+    remove_worktree,
 )
 
 
@@ -76,6 +78,40 @@ def cmd_add(args: argparse.Namespace) -> int:
     return 0
 
 
+def refusal(wt: Worktree, current: Worktree | None) -> str | None:
+    """Why remove must not touch this worktree, or None if it may."""
+    if wt.is_main:
+        return "it is the main worktree"
+    if wt is current:
+        return "you are in it"
+    return None
+
+
+def cmd_remove(args: argparse.Namespace) -> int:
+    query = "".join(args.query)
+    worktrees = [wt for wt in list_worktrees() if not wt.bare]
+    current = find_current(worktrees, current_toplevel())
+    if not query:
+        # Without a query, only offer worktrees that can actually be removed.
+        worktrees = [wt for wt in worktrees if refusal(wt, current) is None]
+        if not worktrees:
+            raise NothingPicked("no worktree can be removed")
+    wt = choose(query, worktrees, describe)
+    reason = refusal(wt, current)
+    if reason:
+        raise NothingPicked(f"refusing to remove {wt.label}: {reason}")
+    if not args.force and is_dirty(wt):
+        print(
+            f"git-worktree-navigator: {wt.label} has uncommitted or untracked "
+            "changes, use --force to remove it anyway",
+            file=sys.stderr,
+        )
+        return 1
+    remove_worktree(wt, force=args.force)
+    print(f"Removed worktree {wt.label} at {display_path(wt.path)}")
+    return 0
+
+
 def cmd_shell_init(args: argparse.Namespace) -> int:
     print(init_script(args.shell), end="")
     return 0
@@ -112,6 +148,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("--base", help="start point for a new branch (default: HEAD)")
     p_add.add_argument("--path", help="put the worktree here instead")
     p_add.set_defaults(func=cmd_add)
+
+    p_remove = sub.add_parser(
+        "remove",
+        help="remove the worktree matching a fuzzy query",
+        description="Remove a worktree. The main worktree and the one you are in "
+        "are never removed. The branch itself is kept.",
+    )
+    p_remove.add_argument("query", nargs="*", help="characters to match, in order")
+    p_remove.add_argument(
+        "--force", action="store_true", help="remove even with uncommitted changes"
+    )
+    p_remove.set_defaults(func=cmd_remove)
 
     p_init = sub.add_parser("shell-init", help="print the gwn shell function")
     p_init.add_argument("shell", choices=SHELLS)
