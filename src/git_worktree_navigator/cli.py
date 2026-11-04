@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import subprocess
 import sys
 from pathlib import Path
 
@@ -64,15 +65,35 @@ def describe(wt: Worktree) -> str:
     return f"{wt.label}  {display_path(wt.path)}"
 
 
-def cmd_switch(args: argparse.Namespace) -> int:
-    query = "".join(args.query)
+def pick_checkout(query: str) -> Worktree:
+    """Choose a worktree that has a folder to work in."""
     # A prunable worktree's folder is gone, so there is nothing to cd into.
     worktrees = [wt for wt in list_worktrees() if not wt.bare and not wt.prunable]
     if not worktrees:
         raise NothingPicked("this repository has no checked-out worktrees")
-    wt = choose(query, worktrees, describe)
-    print(wt.path)
+    return choose(query, worktrees, describe)
+
+
+def cmd_switch(args: argparse.Namespace) -> int:
+    print(pick_checkout("".join(args.query)).path)
     return 0
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    if "--" not in args.words:
+        print("git-worktree-navigator: usage: run [query ...] -- command [args ...]", file=sys.stderr)
+        return 2
+    split = args.words.index("--")
+    query, command = args.words[:split], args.words[split + 1 :]
+    if not command:
+        print("git-worktree-navigator: run needs a command after --", file=sys.stderr)
+        return 2
+    wt = pick_checkout("".join(query))
+    try:
+        return subprocess.run(command, cwd=wt.path).returncode
+    except FileNotFoundError:
+        print(f"git-worktree-navigator: command not found: {command[0]}", file=sys.stderr)
+        return 127
 
 
 def cmd_add(args: argparse.Namespace) -> int:
@@ -152,6 +173,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_switch.add_argument("query", nargs="*", help="characters to match, in order")
     p_switch.set_defaults(func=cmd_switch)
+
+    p_run = sub.add_parser(
+        "run",
+        help="run a command inside the worktree matching a fuzzy query",
+        usage="%(prog)s [query ...] -- command [args ...]",
+        description="Run a command inside the best-matching worktree without "
+        "switching to it, and exit with the command's exit code.",
+        epilog="example: git-worktree-navigator run login -- git log -3",
+    )
+    p_run.add_argument(
+        "words",
+        nargs=argparse.REMAINDER,
+        metavar="[query ...] -- command",
+        help="characters to match, then -- and the command to run",
+    )
+    p_run.set_defaults(func=cmd_run)
 
     p_add = sub.add_parser(
         "add",

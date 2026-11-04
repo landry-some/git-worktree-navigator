@@ -7,7 +7,7 @@ FUNCTION = r"""
 gwn() {
     local out
     case "$1" in
-        list|remove|shell-init|-h|--help|--version)
+        list|remove|run|shell-init|-h|--help|--version)
             command git-worktree-navigator "$@"
             return
             ;;

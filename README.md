@@ -47,8 +47,8 @@ eval "$(git-worktree-navigator shell-init bash)"   # or: shell-init zsh
 ```
 
 That defines `gwn`. `gwn <query>` jumps to the matching worktree, and any other
-`gwn` arguments are passed through, so `gwn list`, `gwn add` and `gwn remove` work
-too. `gwn add` also moves you into the new worktree.
+`gwn` arguments are passed through, so `gwn list`, `gwn add`, `gwn remove` and
+`gwn run` work too. `gwn add` also moves you into the new worktree.
 
 ## Usage
 
@@ -63,6 +63,7 @@ git-worktree-navigator add -b spike/cache   # new branch from HEAD
 git-worktree-navigator add -b spike/cache --base main
 git-worktree-navigator remove login         # remove the matching worktree
 git-worktree-navigator remove login --force # even with uncommitted changes
+git-worktree-navigator run login -- git log -3   # run a command in a worktree
 ```
 
 Example `list` output:
@@ -87,6 +88,13 @@ When the top scores are close, or no query is given, a numbered list is shown on
 stderr and you type the number. The picker never writes to stdout, so
 `cd "$(git-worktree-navigator switch x)"` stays safe.
 
+### Running a command in another worktree
+
+`run` picks a worktree the same way as `switch`, runs the command after `--` inside
+it and exits with the command's exit code. Your shell stays where it is, so
+`git-worktree-navigator run review -- pytest -q` tests a review checkout without
+leaving your own.
+
 ### Where new worktrees go
 
 `add` puts new worktrees in a folder next to the main checkout, named after it:
@@ -108,6 +116,7 @@ of it without a dirty check.
 - `0` success
 - `1` no match, nothing picked, or git refused the operation
 - `2` usage error or not inside a git repository
+- `run` exits with the command's own exit code, or `127` if the command is not found
 
 ## Development
 

@@ -24,7 +24,7 @@ What comes after v0.1. Estimates are rough, in hours, at 8 hours per working day
       template for new worktrees and a default base branch for `add -b` (3 h)
 - [ ] `clean`: list worktrees whose branch is merged or gone upstream and offer to
       remove them, dry run first (3 h)
-- [ ] `run <query> -- <cmd>`: run a command inside a worktree without switching (2 h)
+- [x] `run <query> -- <cmd>`: run a command inside a worktree without switching (2 h)
 
 ## Bugs and edge cases
 
