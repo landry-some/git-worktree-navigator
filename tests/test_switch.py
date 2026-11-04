@@ -1,5 +1,6 @@
 import io
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -107,3 +108,12 @@ def test_gwn_function_changes_directory_in_bash(repo_with_worktrees, monkeypatch
     lines = result.stdout.splitlines()
     target = str(repo_with_worktrees.parent / "shop.worktrees" / "review" / "pr-212")
     assert lines == [target, "rc=1", target], result.stderr
+
+
+def test_switch_skips_worktree_whose_folder_was_deleted(repo_with_worktrees, capsys):
+    shutil.rmtree(repo_with_worktrees.parent / "shop.worktrees" / "review" / "pr-212")
+
+    assert main(["switch", "pr212"]) == 1
+    assert "no worktree matches 'pr212'" in capsys.readouterr().err
+    assert main(["switch", "login"]) == 0
+    assert capsys.readouterr().out.strip().endswith("fix/login-bug")

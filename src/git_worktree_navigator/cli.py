@@ -58,7 +58,8 @@ def describe(wt: Worktree) -> str:
 
 def cmd_switch(args: argparse.Namespace) -> int:
     query = "".join(args.query)
-    worktrees = [wt for wt in list_worktrees() if not wt.bare]
+    # A prunable worktree's folder is gone, so there is nothing to cd into.
+    worktrees = [wt for wt in list_worktrees() if not wt.bare and not wt.prunable]
     if not worktrees:
         raise NothingPicked("this repository has no checked-out worktrees")
     wt = choose(query, worktrees, describe)
@@ -100,7 +101,8 @@ def cmd_remove(args: argparse.Namespace) -> int:
     reason = refusal(wt, current)
     if reason:
         raise NothingPicked(f"refusing to remove {wt.label}: {reason}")
-    if not args.force and is_dirty(wt):
+    # A prunable worktree's folder is gone, so there are no changes to lose.
+    if not args.force and not wt.prunable and is_dirty(wt):
         print(
             f"git-worktree-navigator: {wt.label} has uncommitted or untracked "
             "changes, use --force to remove it anyway",

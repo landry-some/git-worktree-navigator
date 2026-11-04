@@ -30,7 +30,7 @@ What comes after v0.1. Estimates are rough, in hours, at 8 hours per working day
 
 - [ ] Bare-repository layouts (`repo.git` with all checkouts as worktrees) (3 h)
 - [ ] Branch names with slashes, spaces and unicode in worktree paths (2 h)
-- [ ] Worktrees whose folder was deleted by hand (prunable) in `switch` and `remove` (1 h)
+- [x] Worktrees whose folder was deleted by hand (prunable) in `switch` and `remove` (1 h)
 - [ ] Running from inside a nested worktree or a subfolder of one (1 h)
 
 ## Refactors

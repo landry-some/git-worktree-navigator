@@ -95,6 +95,10 @@ another location.
 - the worktree you are currently in
 - a worktree with uncommitted or untracked changes, unless `--force` is given
 
+A worktree whose folder was deleted by hand shows as `prunable` in `list`. `switch`
+skips it, since there is nothing to change into, and `remove` cleans up git's record
+of it without a dirty check.
+
 ## Exit codes
 
 - `0` success

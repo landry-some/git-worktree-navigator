@@ -1,4 +1,5 @@
 import io
+import shutil
 
 import pytest
 from conftest import git
@@ -74,3 +75,11 @@ def test_remove_without_query_offers_only_removable(repo, trees, monkeypatch):
 def test_remove_with_nothing_removable(repo, capsys):
     assert main(["remove"]) == 1
     assert "no worktree can be removed" in capsys.readouterr().err
+
+
+def test_remove_worktree_whose_folder_was_deleted(repo, trees, capsys):
+    shutil.rmtree(trees["login"])
+
+    assert main(["remove", "login"]) == 0
+    assert "Removed worktree fix/login-bug" in capsys.readouterr().out
+    assert branches_with_worktrees(repo) == ["main", "maintenance"]
