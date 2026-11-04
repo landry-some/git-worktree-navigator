@@ -9,7 +9,16 @@ from pathlib import Path
 from . import __version__
 from .picker import NothingPicked, choose
 from .shell import SHELLS, init_script
-from .worktrees import GitError, NotARepository, Worktree, current_toplevel, find_current, list_worktrees
+from .worktrees import (
+    GitError,
+    NotARepository,
+    Worktree,
+    add_worktree,
+    current_toplevel,
+    default_location,
+    find_current,
+    list_worktrees,
+)
 
 
 def display_path(path: Path) -> str:
@@ -55,6 +64,18 @@ def cmd_switch(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_add(args: argparse.Namespace) -> int:
+    if args.base and not args.new:
+        print("git-worktree-navigator: --base only makes sense with -b", file=sys.stderr)
+        return 2
+    main_wt = list_worktrees()[0]
+    path = Path(args.path).resolve() if args.path else default_location(main_wt, args.branch)
+    add_worktree(path, args.branch, new_branch=args.new, base=args.base)
+    print(f"Created worktree for {args.branch} at {display_path(path)}", file=sys.stderr)
+    print(path)
+    return 0
+
+
 def cmd_shell_init(args: argparse.Namespace) -> int:
     print(init_script(args.shell), end="")
     return 0
@@ -79,6 +100,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_switch.add_argument("query", nargs="*", help="characters to match, in order")
     p_switch.set_defaults(func=cmd_switch)
+
+    p_add = sub.add_parser(
+        "add",
+        help="create a worktree for a branch",
+        description="Create a worktree in <repo>.worktrees/<branch> next to the "
+        "main checkout and print its path.",
+    )
+    p_add.add_argument("branch", help="branch to check out")
+    p_add.add_argument("-b", dest="new", action="store_true", help="create the branch")
+    p_add.add_argument("--base", help="start point for a new branch (default: HEAD)")
+    p_add.add_argument("--path", help="put the worktree here instead")
+    p_add.set_defaults(func=cmd_add)
 
     p_init = sub.add_parser("shell-init", help="print the gwn shell function")
     p_init.add_argument("shell", choices=SHELLS)

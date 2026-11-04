@@ -120,3 +120,21 @@ def find_current(worktrees: list[Worktree], toplevel: Path | None) -> Worktree |
         if wt.path.resolve() == resolved:
             return wt
     return None
+
+
+def default_location(main: Worktree, branch: str) -> Path:
+    """`~/code/shop` + `fix/x` -> `~/code/shop.worktrees/fix/x`."""
+    name = main.path.name.removesuffix(".git")
+    return main.path.parent / f"{name}.worktrees" / branch
+
+
+def add_worktree(
+    path: Path, branch: str, new_branch: bool = False, base: str | None = None
+) -> None:
+    if new_branch:
+        args = ["worktree", "add", "-b", branch, str(path)]
+        if base:
+            args.append(base)
+    else:
+        args = ["worktree", "add", str(path), branch]
+    run_git(*args)
