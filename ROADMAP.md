@@ -2,13 +2,13 @@
 
 What comes after v0.1. Estimates are rough, in hours, at 8 hours per working day.
 
-## v0.1 (done when ticked)
+## v0.1 (done)
 
-- [ ] `list`: show every worktree with branch, short HEAD, path and flags
-- [ ] `switch [query]`: fuzzy match on branch and path, numbered picker when ambiguous,
+- [x] `list`: show every worktree with branch, short HEAD, path and flags
+- [x] `switch [query]`: fuzzy match on branch and path, numbered picker when ambiguous,
       `shell-init bash|zsh` for a `gwn` function that changes directory
-- [ ] `add <branch>`: create a worktree in `<repo>.worktrees/<branch>` next to the repo
-- [ ] `remove [query]`: fuzzy-select and remove, with guards for main, current and dirty
+- [x] `add <branch>`: create a worktree in `<repo>.worktrees/<branch>` next to the repo
+- [x] `remove [query]`: fuzzy-select and remove, with guards for main, current and dirty
       worktrees
 
 ## Features
