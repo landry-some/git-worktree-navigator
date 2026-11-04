@@ -54,4 +54,4 @@ What comes after v0.1. Estimates are rough, in hours, at 8 hours per working day
 
 ## Total
 
-44 hours, about 5.5 working days.
+46 hours, about 5.75 working days.
